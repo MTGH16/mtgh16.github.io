@@ -62,6 +62,7 @@
       <div class="sidebar-item" data-tool="chmod">Chmod???</div>
       <div class="sidebar-item" data-tool="docker2compose">Docker Run?Compose</div>
       <div class="sidebar-item" data-tool="ipv4subnet">IPv4?????</div>
+      <div class="sidebar-item" data-tool="websitecheck">??????</div>
 
       <div class="text-xs uppercase text-gray-500 dark:text-gray-400 mt-3 mb-1">????</div>
       <div class="sidebar-item" data-tool="color">??????</div>
@@ -309,6 +310,35 @@
         </div>
       </section>
 
+      <!-- ========== ?????????? ========== -->
+      <section class="tool-panel hidden" id="panel-websitecheck">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">???????IPv4/IPv6?SSL??????????????</p>
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block mb-1">???????https????baidu.com?</label>
+            <input id="webDomainInput" class="tool-textarea" placeholder="baidu.com" value="baidu.com">
+          </div>
+          <div class="flex items-end">
+            <button class="btn-primary w-full" onclick="checkWebsite()">????</button>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- ????? -->
+          <div>
+            <h3 class="font-medium mb-2">???????</h3>
+            <div class="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 min-h-[220px] flex items-center justify-center">
+              <img id="webScreenshot" alt="????" class="max-w-full" />
+              <span id="shotPlaceholder" class="text-gray-400">????????</span>
+            </div>
+          </div>
+          <!-- ?????? -->
+          <div>
+            <h3 class="font-medium mb-2">????</h3>
+            <pre id="webResult" class="tool-textarea overflow-auto whitespace-pre-wrap min-h-[220px]">????...</pre>
+          </div>
+        </div>
+      </section>
+
       <!-- ???? -->
       <section class="tool-panel hidden" id="panel-color">
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">HEX ? RGB ? HSL????</p>
@@ -362,6 +392,7 @@ const toolNameMap = {
   chmod:"Chmod???",
   docker2compose:"Docker Run?Compose",
   ipv4subnet:"IPv4?????",
+  websitecheck:"??????",
   color:"??????"
 };
 
@@ -682,11 +713,67 @@ function nextSubnet(){
   const ipInt = ipToInt(ip);
   const newIp = intToIp(ipInt + (1<<(32-parseInt(cidr))));
   document.getElementById('ipCidrInput').value = `${newIp}/${cidr}`;
-  document.getElementById('ipCidrInput').value = `${newIp}/${cidr}`;
   calcSubnet();
 }
 calcSubnet();
 calcChmod();
+
+// ===================== ?????? ???JS??? =====================
+async function checkWebsite(){
+  const domainInput = document.getElementById('webDomainInput').value.trim();
+  const resultBox = document.getElementById('webResult');
+  const shotImg = document.getElementById('webScreenshot');
+  const shotPlaceholder = document.getElementById('shotPlaceholder');
+  resultBox.innerText = "????????...";
+  shotImg.style.display = "none";
+  shotPlaceholder.style.display = "block";
+
+  // ???????http/https/www
+  let domain = domainInput.replace(/^https?:\/\//,'').replace(/^www\./,'');
+
+  // ???????????????API?
+  shotImg.src = `https://api.screenshotmachine.com?key=demo&url=https://${domain}&cacheLimit=0`;
+  shotImg.onload = ()=>{
+    shotImg.style.display = "block";
+    shotPlaceholder.style.display = "none";
+  }
+  shotImg.onerror = ()=>{
+    shotPlaceholder.innerText = "??????";
+  }
+
+  // ??DNS+SSL??API????
+  try{
+    const res = await fetch(`https://api.sslchecker.io/v1/check?host=${domain}`);
+    const data = await res.json();
+    let ipv4List = data.ipv4 ? data.ipv4.join("\n") : "?IPv4??";
+    let ipv6List = data.ipv6 ? data.ipv6.join("\n") : "?IPv6??";
+    let certStart = data.cert?.valid_from || "?";
+    let certEnd = data.cert?.valid_to || "?";
+    let certIssuer = data.cert?.issuer || "?";
+    let certSubject = data.cert?.subject || "?";
+
+    const infoText = `???${domain}
+--- IPv4?? ---
+${ipv4List}
+
+--- IPv6?? ---
+${ipv6List}
+
+--- SSL???? ---
+?????${certSubject}
+?????${certIssuer}
+???????${certStart}
+???????${certEnd}
+`;
+    resultBox.innerText = infoText;
+  }catch(err){
+    resultBox.innerText = `API????????????\n?????${err.message}\n\n???????API????????`;
+  }
+}
 </script>
+
+<footer class="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">
+  <p>? 2026 IT??? | ??????????????</p>
+</footer>
 </body>
 </html>
