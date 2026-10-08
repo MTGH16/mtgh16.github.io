@@ -1,11 +1,300 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>我的Github网站</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IT网络工具箱 | 存在</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            darkBg: '#111827',
+            cardBg: '#1f2937'
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .tool-card { @apply bg-cardBg rounded-xl p-4 transition-all hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1 cursor-pointer; }
+      .active-card { @apply ring-2 ring-primary; }
+      .textarea-style { @apply w-full bg-gray-800 text-gray-100 rounded-lg p-3 border border-gray-700 focus:border-primary focus:outline-none resize-y min-h-[140px]; }
+      .btn { @apply px-4 py-2 rounded-lg bg-primary text-white hover:bg-blue-600 transition-all; }
+      .btn-gray { @apply px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-500 transition-all; }
+    }
+  </style>
 </head>
-<body>
-    <h1>Hello！这是mtgh16的个人网站</h1>
-    <p>成功部署在 github.io 上啦</p>
+<body class="bg-darkBg text-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- 头部 -->
+    <header class="text-center mb-10">
+      <h1 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold text-primary mb-2">
+        <i class="fa fa-wrench mr-2"></i>IT网络工具箱
+      </h1>
+      <p class="text-gray-400">在线前端工具，无需安装，浏览器直接使用 | 存在.github.io</p>
+    </header>
+
+    <!-- 工具选择导航 -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      <div class="tool-card active-card" data-tool="json">
+        <i class="fa fa-code text-2xl text-primary mb-2"></i>
+        <div>JSON格式化</div>
+      </div>
+      <div class="tool-card" data-tool="url">
+        <i class="fa fa-link text-2xl text-green-400 mb-2"></i>
+        <div>URL编解码</div>
+      </div>
+      <div class="tool-card" data-tool="timestamp">
+        <i class="fa fa-clock-o text-2xl text-yellow-400 mb-2"></i>
+        <div>时间戳转换</div>
+      </div>
+      <div class="tool-card" data-tool="base64">
+        <i class="fa fa-lock text-2xl text-purple-400 mb-2"></i>
+        <div>Base64加解密</div>
+      </div>
+      <div class="tool-card" data-tool="regex">
+        <i class="fa fa-search text-2xl text-orange-400 mb-2"></i>
+        <div>正则测试</div>
+      </div>
+      <div class="tool-card" data-tool="hex">
+        <i class="fa fa-calculator text-2xl text-cyan-400 mb-2"></i>
+        <div>进制转换</div>
+      </div>
+    </div>
+
+    <!-- 工具面板区域 -->
+    <div class="bg-cardBg rounded-2xl p-6 shadow-xl">
+      <!-- JSON格式化 -->
+      <section id="panel-json" class="tool-panel">
+        <h2 class="text-xl font-semibold mb-4">JSON格式化/压缩</h2>
+        <textarea id="json-input" class="textarea-style" placeholder="粘贴JSON字符串..."></textarea>
+        <div class="flex gap-2 my-4 flex-wrap">
+          <button class="btn" onclick="jsonFormat()">格式化</button>
+          <button class="btn-gray" onclick="jsonCompress()">压缩</button>
+          <button class="btn-gray" onclick="copyResult('json-input')">复制结果</button>
+          <button class="btn-gray" onclick="clearText('json-input')">清空</button>
+        </div>
+      </section>
+
+      <!-- URL编解码 -->
+      <section id="panel-url" class="tool-panel hidden">
+        <h2 class="text-xl font-semibold mb-4">URL编码 / 解码</h2>
+        <textarea id="url-input" class="textarea-style" placeholder="输入需要处理的URL字符串"></textarea>
+        <div class="flex gap-2 my-4 flex-wrap">
+          <button class="btn" onclick="urlEncode()">URL编码</button>
+          <button class="btn" onclick="urlDecode()">URL解码</button>
+          <button class="btn-gray" onclick="copyResult('url-input')">复制</button>
+          <button class="btn-gray" onclick="clearText('url-input')">清空</button>
+        </div>
+      </section>
+
+      <!-- 时间戳转换 -->
+      <section id="panel-timestamp" class="tool-panel hidden">
+        <h2 class="text-xl font-semibold mb-4">时间戳 ⇋ 日期转换</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block mb-1 text-gray-300">时间戳(秒/毫秒)</label>
+            <input id="ts-input" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-700" placeholder="1720000000">
+          </div>
+          <div>
+            <label class="block mb-1 text-gray-300">日期时间</label>
+            <input id="ts-date" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-700" placeholder="2025-01-01 12:00:00">
+          </div>
+        </div>
+        <div class="flex gap-2 mt-4 flex-wrap">
+          <button class="btn" onclick="tsToDate()">时间戳转日期</button>
+          <button class="btn" onclick="dateToTs()">日期转时间戳</button>
+          <button class="btn-gray" onclick="getNowTs()">获取当前时间戳</button>
+        </div>
+        <div id="ts-output" class="mt-4 p-3 bg-gray-800 rounded-lg"></div>
+      </section>
+
+      <!-- Base64加解密 -->
+      <section id="panel-base64" class="tool-panel hidden">
+        <h2 class="text-xl font-semibold mb-4">Base64 加密 / 解密</h2>
+        <textarea id="b64-input" class="textarea-style" placeholder="输入文本"></textarea>
+        <div class="flex gap-2 my-4 flex-wrap">
+          <button class="btn" onclick="base64Encode()">Base64编码</button>
+          <button class="btn" onclick="base64Decode()">Base64解码</button>
+          <button class="btn-gray" onclick="copyResult('b64-input')">复制</button>
+          <button class="btn-gray" onclick="clearText('b64-input')">清空</button>
+        </div>
+      </section>
+
+      <!-- 正则测试 -->
+      <section id="panel-regex" class="tool-panel hidden">
+        <h2 class="text-xl font-semibold mb-4">正则表达式测试</h2>
+        <div class="grid md:grid-cols-2 gap-4 mb-3">
+          <div>
+            <label class="block mb-1 text-gray-300">正则表达式</label>
+            <input id="reg-exp" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-700" placeholder="/abc/g">
+          </div>
+          <div>
+            <label class="block mb-1 text-gray-300">匹配文本</label>
+            <input id="reg-text" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-700" placeholder="测试文本">
+          </div>
+        </div>
+        <button class="btn mb-3" onclick="regexTest()">执行匹配</button>
+        <div id="reg-output" class="p-3 bg-gray-800 rounded-lg min-h-[80px]"></div>
+      </section>
+
+      <!-- 进制转换 -->
+      <section id="panel-hex" class="tool-panel hidden">
+        <h2 class="text-xl font-semibold mb-4">进制转换(2/8/10/16)</h2>
+        <div class="grid md:grid-cols-2 gap-3">
+          <div>
+            <label class="block mb-1 text-gray-300">输入数值</label>
+            <input id="num-val" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-700" placeholder="输入数字">
+          </div>
+          <div>
+            <label class="block mb-1 text-gray-300">原进制</label>
+            <select id="num-from" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-700">
+              <option value="2">二进制</option>
+              <option value="8">八进制</option>
+              <option value="10" selected>十进制</option>
+              <option value="16">十六进制</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn mt-4 mb-3" onclick="convertNum()">转换</button>
+        <div id="num-out" class="p-3 bg-gray-800 rounded-lg"></div>
+      </section>
+    </div>
+
+    <footer class="text-center mt-10 text-gray-500 text-sm">
+      <p>© 2026 存在 | 部署于 GitHub Pages</p>
+    </footer>
+  </div>
+
+  <script>
+    // 切换工具面板
+    const cards = document.querySelectorAll('.tool-card');
+    const panels = document.querySelectorAll('.tool-panel');
+    cards.forEach(card=>{
+      card.onclick = ()=>{
+        const tool = card.dataset.tool;
+        cards.forEach(c=>c.classList.remove('active-card'));
+        card.classList.add('active-card');
+        panels.forEach(p=>p.classList.add('hidden'));
+        document.getElementById(`panel-${tool}`).classList.remove('hidden');
+      }
+    })
+
+    // 通用工具
+    function clearText(id){ document.getElementById(id).value = ''; }
+    function copyResult(id){
+      const val = document.getElementById(id).value;
+      navigator.clipboard.writeText(val).then(()=>alert("复制成功"));
+    }
+
+    // JSON工具
+    function jsonFormat(){
+      const el = document.getElementById('json-input');
+      try{
+        const obj = JSON.parse(el.value);
+        el.value = JSON.stringify(obj,null,2);
+      }catch(e){ alert("JSON格式错误"); }
+    }
+    function jsonCompress(){
+      const el = document.getElementById('json-input');
+      try{
+        const obj = JSON.parse(el.value);
+        el.value = JSON.stringify(obj);
+      }catch(e){ alert("JSON格式错误"); }
+    }
+
+    // URL编解码
+    function urlEncode(){
+      const el = document.getElementById('url-input');
+      el.value = encodeURIComponent(el.value);
+    }
+    function urlDecode(){
+      const el = document.getElementById('url-input');
+      try{ el.value = decodeURIComponent(el.value); }
+      catch(e){alert("解码失败")}
+    }
+
+    // 时间戳
+    function tsToDate(){
+      const v = document.getElementById('ts-input').value.trim();
+      const out = document.getElementById('ts-output');
+      let num = Number(v);
+      if(v.length>12) num = num; else num = num*1000;
+      const d = new Date(num);
+      if(isNaN(d.getTime())){ out.innerText="无效时间戳";return; }
+      const fmt = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0')
+        +" "+String(d.getHours()).padStart(2,'0')+":"+String(d.getMinutes()).padStart(2,'0')+":"+String(d.getSeconds()).padStart(2,'0');
+      document.getElementById('ts-date').value = fmt;
+      out.innerText = `北京时间：${fmt}\n秒时间戳：${Math.floor(d.getTime()/1000)}\n毫秒时间戳：${d.getTime()}`;
+    }
+    function dateToTs(){
+      const dStr = document.getElementById('ts-date').value;
+      const d = new Date(dStr);
+      const out = document.getElementById('ts-output');
+      if(isNaN(d.getTime())){ out.innerText="日期格式错误";return; }
+      document.getElementById('ts-input').value = Math.floor(d.getTime()/1000);
+      out.innerText = `秒时间戳：${Math.floor(d.getTime()/1000)}\n毫秒时间戳：${d.getTime()}`;
+    }
+    function getNowTs(){
+      const now = Date.now();
+      document.getElementById('ts-input').value = Math.floor(now/1000);
+      tsToDate();
+    }
+
+    // Base64
+    function base64Encode(){
+      const el = document.getElementById('b64-input');
+      el.value = btoa(unescape(encodeURIComponent(el.value)));
+    }
+    function base64Decode(){
+      const el = document.getElementById('b64-input');
+      try{
+        el.value = decodeURIComponent(escape(atob(el.value)));
+      }catch(e){alert("Base64解码失败")}
+    }
+
+    // 正则测试
+    function regexTest(){
+      const expStr = document.getElementById('reg-exp').value.trim();
+      const text = document.getElementById('reg-text').value;
+      const out = document.getElementById('reg-output');
+      try{
+        const arr = expStr.match(/^\/(.*)\/([gims]*)$/);
+        let reg;
+        if(arr){
+          reg = new RegExp(arr[1],arr[2]);
+        }else{
+          reg = new RegExp(expStr,"g");
+        }
+        const match = [...text.matchAll(reg)];
+        if(match.length===0){ out.innerText="无匹配结果";return; }
+        out.innerText = JSON.stringify(match.map(x=>x[0]),null,2);
+      }catch(e){ out.innerText="正则错误："+e.message; }
+    }
+
+    // 进制转换
+    function convertNum(){
+      const val = document.getElementById('num-val').value.trim();
+      const fromBase = Number(document.getElementById('num-from').value);
+      const outDom = document.getElementById('num-out');
+      try{
+        const dec = parseInt(val, fromBase);
+        if(isNaN(dec)){ outDom.innerText="输入数值无效";return; }
+        outDom.innerText = `
+二进制: ${dec.toString(2)}
+八进制: ${dec.toString(8)}
+十进制: ${dec.toString(10)}
+十六进制: ${dec.toString(16).toUpperCase()}
+        `.trim();
+      }catch(e){
+        outDom.innerText="转换出错";
+      }
+    }
+  </script>
 </body>
 </html>
